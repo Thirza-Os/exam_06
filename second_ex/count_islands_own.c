@@ -41,8 +41,6 @@ int main(int argc, char**argv)
         return(1);
     }
 
-    
-    
     // Check for wrong legths 
 
     // count length first row:
