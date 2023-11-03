@@ -6,11 +6,12 @@
 void printMap(char **map, int rows, int columns) {
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
-            printf("%c ", map[i][j]);
+            char c = map[i][j];
+            write(1, &c, 1); // Use write to output a single character
         }
+        write(1, "\n", 1); // Add a newline at the end of each row
     }
 }
-
 
 int floodFill(char **map, int row, int column, char mark, int rows, int columns) {
     if (row < 0 || row >= rows || column < 0 || column >= columns || map[row][column] != 'X')
@@ -30,45 +31,42 @@ int floodFill(char **map, int row, int column, char mark, int rows, int columns)
 }
 
 int main(int argc, char *argv[]) {
-    char visited = 'v';
-    int largestIsland = 0;
-    int currentSize;
+    int islandsCount = -1; // Initialize the count of islands
     int fd;
 
     int rows = 1;
     int columns = 0;
     char curr;
 
-    int row = 0;
-    int column = 0;
-
     if (argc != 2) {
-        write(1, "nope", 4);
+        write(1, "Usage: program input.txt\n", 26);
         exit(1);
     }
 
     fd = open(argv[1], O_RDONLY);
     if (fd < 0) {
-        write(1, "nope", 4);
+        write(1, "Error opening file\n", 19);
         exit(1);
     }
 
-    while(read(fd, &curr, 1) == 1){
-        if(curr == '\n'){
+    // First pass: Count rows and columns
+    while (read(fd, &curr, 1) == 1) {
+        if (curr == '\n') {
             rows++;
             columns = 0;
-            }
+        }
         columns++;
     }
+
     close(fd);
 
-    char **map = (char**)malloc(rows * sizeof(char*));
+    char **map = (char **)malloc(rows * sizeof(char *));
     for (int i = 0; i < rows; i++)
-        map[i] = (char*)malloc(columns * sizeof(char));
+        map[i] = (char *)malloc(columns * sizeof(char));
 
     fd = open(argv[1], O_RDONLY);
     if (fd < 0) {
-        write(1, "nope", 4);
+        write(1, "Error opening file 2\n", 21);
         exit(1);
     }
 
@@ -80,23 +78,21 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-    printMap(map, rows, columns);
+    close(fd);
 
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
             if (map[i][j] == 'X') {
-                currentSize = floodFill(map, i, j, visited, rows, columns);
-                if (currentSize > largestIsland)
-                    largestIsland = currentSize;
+                islandsCount++; // Increment the count for each new island
+                floodFill(map, i, j, '0' + islandsCount, rows, columns);
             }
         }
     }
 
+    // Output the modified map with counts
+    printMap(map, rows, columns);
 
-
-    printf("Size of the largest island: %i\n", largestIsland);
-    close(fd);
-
+    // Free allocated memory
     for (int i = 0; i < rows; i++) {
         free(map[i]);
     }
